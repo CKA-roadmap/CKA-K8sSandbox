@@ -18,16 +18,28 @@ variable "image_url" {
   default = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-38-1.6.x86_64.qcow2"
 }
 
+variable "ram" {
+  description = "Amount of RAM for the VM"
+  default = 1024
+}
+
+variable "cpus" {
+  description = "Number of CPUs for the VM"
+  default = 1
+}
+
 data "template_file" "user_data" {
   template = <<-EOF
     #cloud-config
+    hostname: ${var.vm_name}
     users:
       - name: fedora
         ssh-authorized-keys:
           - ${file("~/.ssh/id_rsa.pub")}
+    runcmd:
+      - [ hostnamectl, set-hostname, ${var.vm_name} ]
   EOF
 }
-
 
 resource "libvirt_cloudinit_disk" "cloudinit_disk" {
   name           = "cloudinit_${var.vm_name}"
@@ -43,8 +55,8 @@ resource "libvirt_volume" "vm_disk" {
 
 resource "libvirt_domain" "vm" {
   name   = var.vm_name
-  memory = "1024"
-  vcpu   = 1
+  memory = var.ram
+  vcpu   = var.cpus
 
   disk {
     volume_id = libvirt_volume.vm_disk.id

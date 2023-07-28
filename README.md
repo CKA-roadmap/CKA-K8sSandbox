@@ -51,7 +51,7 @@ sudo systemctl reboot
 To check the IP address of the created VM, you can run the following command:
 
 ```bash
-terraform output
+terraform refresh
 ```
 
 This command will print the IP address of your VM. Caveat, it takes few seconds for the VM to get an IP assigned, so please, wait a moment and be patient.
@@ -65,7 +65,3 @@ terraform destroy -auto-approve
 ```
 
 This command destroys the Terraform-managed infrastructure.
-
-## Note
-
-The VM creation and the assignment of the IP address might take some time depending upon various factors such as network configuration, DHCP server response times, etc. If you are scripting this, you might want to add some delay or retry logic.

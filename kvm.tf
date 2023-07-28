@@ -65,6 +65,6 @@ resource "libvirt_domain" "vm" {
   }
 }
 
-output "vm_ip_address" {
-  value = length(libvirt_domain.vm.network_interface.0.addresses) > 0 ? libvirt_domain.vm.network_interface.0.addresses[0] : "IP not assigned"
+output "ssh_command" {
+  value = length(libvirt_domain.vm.network_interface.0.addresses) > 0 ? "ssh fedora@${libvirt_domain.vm.network_interface.0.addresses[0]}" : "IP not assigned, run `terraform refresh` in a few seconds"
 }

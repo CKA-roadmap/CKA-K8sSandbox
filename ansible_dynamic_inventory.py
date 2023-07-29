@@ -23,10 +23,10 @@ def generate_inventory(tf_output):
         }
     }
 
-    for info in tf_output['output_info']['value']:
+    for name, info in tf_output['network_info']['value'].items():
         if info['ip'].startswith("IP not assigned"):
             continue
-        host = info['name']
+        host = info['vm_fqdn']
         inventory['kvm']['hosts'].append(host)
         inventory['_meta']['hostvars'][host] = {
             'ansible_host': info['ip'],

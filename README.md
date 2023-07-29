@@ -1,40 +1,47 @@
-# Terraform Libvirt Provider Example
+# KVM Virtual Machine Provisioning via Terraform and Configuration with Ansible
 
-This repository contains a Terraform script for creating multiple virtual machines (VMs) on KVM using the Libvirt provider.
+The aim of this project is to streamline the process of provisioning and configuring a variable quantity of virtual machines on a Kernel-based Virtual Machine (KVM) host using the Terraform libvirt provider and Ansible. Some of the main features:
 
-The provider is available on [Github](https://github.com/dmacvicar/terraform-provider-libvirt). You can find more detailed information in their [official documentation](https://github.com/dmacvicar/terraform-provider-libvirt).
+1. **Automated disk image downloading**: Terraform will download a bootable disk image for each VM being provisioned.
 
-The script creates a configurable number of VMs, each with its own unique name, downloads a cloud image of Fedora, creates a cloud-init configuration with your SSH public key, and applies it to each VM.
+2. **Unique VM naming**: Each VM created as part of the project is assigned a unique name, helping to simplify identification and management.
 
-## Requirements
+3. **Cloud-init configuration**: A cloud-init configuration is prepared for each VM. This configuration includes the user's SSH public key, facilitating secure access to the VMs.
 
-- Terraform v0.13 or newer
+4. **Ansible dynamic inventory**: The project sets up Ansible for configuration management by relying on a custom Ansible dynamic inventory. This allows Ansible to manage the newly-provisioned hosts as soon as they are up and running.
+
+## Prerequisites
+
+Before you begin, ensure your system meets the following requirements:
+
+- Terraform v0.13 or later
 - [Terraform Libvirt Provider](https://github.com/dmacvicar/terraform-provider-libvirt)
 - libvirt
 - KVM
 
-## Initial Setup
-
-To prevent issues related to security permissions, you may need to disable AppArmor on your system:
+If using Ubuntu, you may need to disable AppArmor on your system:
 
 ```bash
 sudo systemctl disable --now apparmor
 sudo systemctl reboot
 ```
 
-## Usage
+## How to Use
 
-First, create a `variables.tfvars` file with the following content:
+Start by creating a `variables.tfvars` file with the following content:
 
 ```hcl
 vm_name = "my_vm"
 image_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-38-1.6.x86_64.qcow2"
+image_cloud_user = "fedora"
 ram = 2048
 cpus = 1
-vm_count = 4
+vm_count = 2
 ```
 
-You can adjust the values to fit your needs.
+You can modify these values as per your requirements.
+
+The following steps will guide you to deploy the VMs:
 
 1. Initialize Terraform:
 
@@ -42,15 +49,15 @@ You can adjust the values to fit your needs.
 terraform init
 ```
 
-   This command initializes various local settings and data that will be used by subsequent commands.
+This command configures various local settings and data necessary for subsequent Terraform operations.
 
-2. Verify the plan:
+2. Preview the execution plan:
 
 ```bash
 terraform plan -var-file="variables.tfvars"
 ```
 
-   This command creates an execution plan. It determines what actions are necessary to achieve the desired state specified in the configuration files.
+This command generates an execution plan that outlines the steps needed to achieve the state defined in the configuration files.
 
 3. Apply the changes:
 
@@ -58,20 +65,25 @@ terraform plan -var-file="variables.tfvars"
 terraform apply -auto-approve -var-file="variables.tfvars"
 ```
 
-   This command applies the changes required to reach the desired state of the configuration.
+This command implements the changes required to match the desired configuration state. Upon completion, it outputs the IP addresses of the created VMs. Note: There may be a delay before the VMs are assigned IP addresses. If they are not immediately available, you can update the state by running `terraform refresh -var-file=variables.tfvars`.
 
-After the command completes, it will print the SSH commands to connect to each VM. Please note that it might take a few seconds for the VMs to get an IP assigned, so please be patient.
+4. Verify the connectivity with Ansible:
+
+```bash
+ansible all -m ping
+```
+This command checks if Ansible can reach the newly provisioned VMs. It will work once the VMs have completed booting and the network configuration is set.
 
 ## Cleaning Up
 
-When you are done with the VMs, you can remove them with the following command:
+When you no longer require the VMs, you can remove them with:
 
 ```bash
 terraform destroy -auto-approve -var-file="variables.tfvars"
 ```
 
-This command destroys the Terraform-managed infrastructure.
+This command destroys all the infrastructure elements managed by Terraform.
 
-## The `count` parameter
+## Resources
 
-The `count` parameter in the Terraform configuration allows you to create multiple instances of a resource. In this example, it is used to create a configurable number of VMs, each with its own unique name, disk volume, and cloud-init configuration. The number of VMs is controlled by the `vm_count` variable in the `variables.tfvars` file.
+[Libvirt terraform provider docs](https://github.com/dmacvicar/terraform-provider-libvirt) 

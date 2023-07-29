@@ -10,28 +10,15 @@ provider "libvirt" {
   uri = "qemu:///system"
 }
 
-variable "vm_name" {
-  default = "my_vm"
-}
+variable "vm_name" {}
 
-variable "image_url" {
-  default = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-38-1.6.x86_64.qcow2"
-}
+variable "image_url" {}
 
-variable "ram" {
-  description = "Amount of RAM for the VM"
-  default = 2048
-}
+variable "ram" {}
 
-variable "cpus" {
-  description = "Number of CPUs for the VM"
-  default = 1
-}
+variable "cpus" {}
 
-variable "vm_count" {
-  description = "Number of REPLICAS. Total number of VMs is count + 1"
-  default = 4
-}
+variable "vm_count" {}
 
 data "template_file" "user_data" {
   count    = var.vm_count

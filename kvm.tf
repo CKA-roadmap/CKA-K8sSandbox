@@ -15,6 +15,10 @@ variable "vm_subdomain" {
   default = "k8s.lab"
 }
 
+variable "vm_network_name" {
+  description = "Name of the KVM Network"
+}
+
 variable "vm_network" {
   description = "Network range for the KVM VMs"
   default = "192.168.123.0/24"
@@ -53,7 +57,7 @@ data "template_file" "user_data" {
 }
 
 resource "libvirt_network" "private_network" {
-  name       = "k8s_lab_network"
+  name       = "${var.vm_network_name}"
   mode       = "nat"
   domain     = "${var.vm_subdomain}"
   addresses  = ["${var.vm_network}"]
@@ -134,13 +138,6 @@ resource "libvirt_domain" "vm" {
   }
 }
 
-resource "libvirt_network_dns_record" "vm_dns_records" {
-  for_each = var.instances
-
-  network_name = libvirt_network.private_network.name
-  hostname     = each.key
-  ip           = libvirt_domain.vm[each.key].network_interface.0.addresses[0]
-}
 
 output "network_info" {
   value = { for name, instance in var.instances :

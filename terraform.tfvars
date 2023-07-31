@@ -7,6 +7,9 @@ image_cloud_user = "fedora"
 # subdmain for the vms
 vm_subdomain = "k8s.lab"     
 
+# name of the kvm vm
+vm_network_name = "k8s_lab_network"
+
 # ipv4 network for the vms
 vm_network = "192.168.123.0/24"
 

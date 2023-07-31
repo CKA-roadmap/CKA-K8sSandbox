@@ -11,6 +11,13 @@ Before using this Terraform configuration, ensure you have the following install
 - An existing base image (e.g., QEMU image in qcow2 format) accessible via a URL or local path
 - SSH public key configured for your local user in your workstation
 
+If using Ubuntu, you may need to disable AppArmor on your system:
+
+```bash
+sudo systemctl disable --now apparmor
+sudo systemctl reboot
+```
+
 ## Configuration
 
 Before running the Terraform scripts, you need to set the following variables in a `terraform.tfvars` file:

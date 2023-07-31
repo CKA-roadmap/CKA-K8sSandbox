@@ -33,18 +33,16 @@ Before running the Terraform scripts, you need to set the following variables in
 Example `terraform.tfvars`:
 
 ```hcl
-image_url        = "http://example.com/base_image.qcow2"
-image_cloud_user = "example_user"
-vm_subdomain     = "k8s.lab"
+# map of instances to be created. Expand the map as needed 
 instances = {
-  vm1 = {
-    vm_ram       = 2048
-    vm_cpus      = 2
-    extra_disks  = [10, 20]
+  master01 = {                             # name of the vm in the instances map, it can be arbitrary
+    vm_ram = 4,                            # ram for the system, value is in GB
+    vm_cpus = 1                            # cpus for the system 
   },
-  vm2 = {
-    vm_ram       = 1024
-    vm_cpus      = 1
+  worker01 = {
+    vm_ram = 2,
+    vm_cpus = 1,
+    extra_disks = [10,10]                  # array of extra disks, each element is the size of the extra disk in GB
   }
 }
 ```

@@ -49,6 +49,8 @@ data "template_file" "user_data" {
     hostname: ${each.key}
     users:
       - name: ${var.image_cloud_user}
+        sudo: ['ALL=(ALL) NOPASSWD:ALL']
+        groups: sudo
         ssh_authorized_keys:
           - ${file("~/.ssh/id_rsa.pub")}
     runcmd:

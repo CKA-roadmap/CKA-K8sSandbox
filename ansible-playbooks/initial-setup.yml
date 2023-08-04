@@ -18,7 +18,7 @@
   become: true
   vars:
     containerd_disk: /dev/vdb
-    container_disk_fs: xfs
+    containerd_disk_fs: xfs
   tasks:
     - name: install containerd
       dnf:
@@ -36,19 +36,30 @@
       when: mount_point.stat.exists == false
 
     - name: Format the disk
-      ansible.builtin.filesystem:
-        fstype: "{{ container_disk_fs }}"
+      community.general.filesystem:
+        fstype: "{{ containerd_disk_fs }}"
         dev: "{{ containerd_disk }}"
 
     - name: Mount disk to the directory
-      mount:
+      ansible.posix.mount:
         path: /var/lib/containerd
         src: "{{ containerd_disk }}"
-        fstype: "{{ container_disk_fs }}"
+        fstype: "{{ containerd_disk_fs }}"
         state: mounted
 
     - name: Add to fstab
       lineinfile:
         path: /etc/fstab
-        line: "{{ containerd_disk }}" /var/lib/containerd {{ container_disk_fs }} defaults 0 0"
+        line: "{{ containerd_disk }} /var/lib/containerd {{ containerd_disk_fs }} defaults 0 0"
         state: present
+
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+        daemon_reload: yes
+
+    - name: Enable containerd to start at boot
+      ansible.builtin.systemd:
+        name: containerd
+        enabled: yes

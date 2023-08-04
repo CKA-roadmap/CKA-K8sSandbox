@@ -1,0 +1,54 @@
+---
+- name: initial setup 
+  gather_facts: false
+  hosts: all
+  become: true
+  tasks:
+    - name: install clients
+      dnf:
+        name: 
+          - kubernetes-client-1.26.7-1.fc38
+          - kubernetes-kubeadm-1.26.7-1.fc38
+          - kubernetes-node-1.26.7-1.fc38
+        state: present
+      
+- name: configure containerd
+  gather_facts: false
+  hosts: all
+  become: true
+  vars:
+    containerd_disk: /dev/vdb
+    container_disk_fs: xfs
+  tasks:
+    - name: install containerd
+      dnf:
+        name: containerd-1.6.19-1.fc38
+        state: present
+    - name: Check if mount point exists
+      stat:
+        path: /var/lib/containerd
+      register: mount_point
+
+    - name: Create mount point directory if it does not exist
+      file:
+        path: /var/lib/containerd
+        state: directory
+      when: mount_point.stat.exists == false
+
+    - name: Format the disk
+      ansible.builtin.filesystem:
+        fstype: "{{ container_disk_fs }}"
+        dev: "{{ containerd_disk }}"
+
+    - name: Mount disk to the directory
+      mount:
+        path: /var/lib/containerd
+        src: "{{ containerd_disk }}"
+        fstype: "{{ container_disk_fs }}"
+        state: mounted
+
+    - name: Add to fstab
+      lineinfile:
+        path: /etc/fstab
+        line: "{{ containerd_disk }}" /var/lib/containerd {{ container_disk_fs }} defaults 0 0"
+        state: present

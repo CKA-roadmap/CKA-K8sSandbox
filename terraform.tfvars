@@ -15,8 +15,14 @@ vm_network = "192.168.123.0/24"
 
 # map of instances to be created. Expand the map as needed 
 instances = {
-  master01 = {                             # name of the vm in the instances map, it can be arbitrary
+  master = {                             # name of the vm in the instances map, it can be arbitrary
     vm_ram = 4,                            # ram for the system, value is in GB
-    vm_cpus = 2                            # cpus for the system 
+    vm_cpus = 2,                            # cpus for the system 
+    extra_disks = [10]                  # array of extra disks, each element is the size of the extra disk in GB
+  },
+  worker = {                             # name of the vm in the instances map, it can be arbitrary
+    vm_ram = 4,                            # ram for the system, value is in GB
+    vm_cpus = 2,                            # cpus for the system 
+    extra_disks = [10]                  # array of extra disks, each element is the size of the extra disk in GB
   }
 }

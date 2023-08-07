@@ -1,0 +1,9 @@
+---
+# tasks file for kubernetes-common
+- name: install clients
+  dnf:
+    name: 
+      - kubernetes-client-1.26.7-1.fc38
+      - kubernetes-kubeadm-1.26.7-1.fc38
+      - kubernetes-node-1.26.7-1.fc38
+    state: present

@@ -12,7 +12,6 @@ provider "libvirt" {
 
 variable "vm_subdomain" {
   description = "Subdomain for the KVM VMs"
-  default = "k8s.lab"
 }
 
 variable "vm_network_name" {
@@ -21,7 +20,6 @@ variable "vm_network_name" {
 
 variable "vm_network" {
   description = "Network range for the KVM VMs"
-  default = "192.168.123.0/24"
 }
 
 variable "image_url" {
@@ -35,9 +33,12 @@ variable "image_cloud_user" {
 variable "instances" {
   description = "Map of KVM instances"
   type = map(object({
-    vm_ram       = number
-    vm_cpus      = number
-    extra_disks  = optional(list(number))
+    vm_ram           = optional(number)
+    vm_cpus          = optional(number)
+    extra_disks      = optional(list(number))
+    image_url        = optional(string)
+    image_cloud_user = optional(string)
+    roles            = optional(list(string))
   }))
   default = {}
 }
@@ -48,7 +49,7 @@ data "template_file" "user_data" {
     #cloud-config
     hostname: ${each.key}
     users:
-      - name: ${var.image_cloud_user}
+      - name: ${each.value.image_cloud_user != null ? each.value.image_cloud_user : var.image_cloud_user}
         sudo: ['ALL=(ALL) NOPASSWD:ALL']
         groups: sudo
         ssh_authorized_keys:
@@ -57,6 +58,7 @@ data "template_file" "user_data" {
       - [ hostnamectl, set-hostname, ${each.key}.${var.vm_subdomain} ]
   EOF
 }
+
 
 resource "libvirt_network" "private_network" {
   name       = "${var.vm_network_name}"
@@ -84,8 +86,9 @@ resource "libvirt_volume" "vm_disk" {
   name     = "${each.key}_volume.qcow2"
   pool     = "default"
   format   = "qcow2"
-  source   = var.image_url
+  source   = each.value.image_url != null ? each.value.image_url : var.image_url
 }
+
 
 locals {
   disk_map = flatten([
@@ -113,8 +116,10 @@ resource "libvirt_volume" "extra_disk" {
 resource "libvirt_domain" "vm" {
   for_each = var.instances
   name     = each.key
-  memory   = each.value.vm_ram * 1024 # memory value is in MB in Terraform Libvirt provider
-  vcpu     = each.value.vm_cpus
+  # If vm_ram is defined use it, otherwise default to 2GB
+  memory   = each.value.vm_ram != null ? each.value.vm_ram * 1024 : 2 * 1024 
+  # If vm_cpus is defined use it, otherwise default to 2 vCPUs
+  vcpu     = each.value.vm_cpus != null ? each.value.vm_cpus : 2
 
   disk {
     volume_id = libvirt_volume.vm_disk[each.key].id
@@ -141,12 +146,13 @@ resource "libvirt_domain" "vm" {
 }
 
 
-output "network_info" {
+output "hosts_info" {
   value = { for name, instance in var.instances :
     name => {
-      "vm_fqdn"    = "${name}.${var.vm_subdomain}"      
-      "ip"         = length(libvirt_domain.vm[name].network_interface.0.addresses) > 0 ? "${libvirt_domain.vm[name].network_interface.0.addresses[0]}" : "IP not assigned"      
+      "vm_fqdn"    = "${name}.${var.vm_subdomain}"
+      "ip"         = length(libvirt_domain.vm[name].network_interface.0.addresses) > 0 ? "${libvirt_domain.vm[name].network_interface.0.addresses[0]}" : "IP not assigned"
       "cloud_user" = var.image_cloud_user
+      "roles"      = instance.roles != null ? instance.roles : []
     }
   }
 }

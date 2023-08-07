@@ -1,0 +1,51 @@
+---
+# tasks file for containerd
+- name: install containerd
+  dnf:
+    name: containerd-{{ containerd_version | default(omit) }}
+    state: present
+
+- name: configure dedicated storage
+  block:
+    - name: Check if mount point exists
+      stat:
+        path: /var/lib/containerd
+      register: mount_point
+
+    - name: Create mount point directory if it does not exist
+      file:
+        path: /var/lib/containerd
+        state: directory
+      when: mount_point.stat.exists == false
+
+    - name: Format the disk
+      community.general.filesystem:
+        fstype: "{{ containerd_disk_fs }}"
+        dev: "{{ containerd_disk }}"
+
+    - name: Mount disk to the directory
+      ansible.posix.mount:
+        path: /var/lib/containerd
+        src: "{{ containerd_disk }}"
+        fstype: "{{ containerd_disk_fs }}"
+        state: mounted
+
+    - name: Add to fstab
+      lineinfile:
+        path: /etc/fstab
+        line: "{{ containerd_disk }} /var/lib/containerd {{ containerd_disk_fs }} defaults 0 0"
+        state: present
+
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+        daemon_reload: yes
+  when:
+    - containerd_disk is defined
+    - containerd_disk_fs is defined
+
+- name: Enable containerd to start at boot
+  ansible.builtin.systemd:
+    name: containerd
+    enabled: yes

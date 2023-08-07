@@ -1,32 +1,13 @@
----
 - hosts: all
   become: true
   vars_files:
     - kubernetes_vars.yml
   roles:
     - common
-    - containerd
+    - "{{ container_runtime }}"
     - kubernetes-common
-
-- hosts: masters
-  become: true
-  vars_files:
-    - kubernetes_vars.yml
-  roles:
-    - master
-
-- hosts: workers
-  become: true
-  vars_files:
-    - kubernetes_vars.yml
-  roles:
-    - worker
-
-- hosts: all
-  become: true
-  vars_files:
-    - kubernetes_vars.yml
-  roles:
+    - { role: master, when: "'master' in group_names" }
+    - { role: worker, when: "'worker' in group_names" }
     - networking
     - addons
     - security

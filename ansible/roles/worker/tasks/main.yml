@@ -1,2 +1,3 @@
 ---
 # tasks file for worker
+- debug: msg="Hello I am a worker!"

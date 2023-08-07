@@ -1,2 +1,3 @@
 ---
 # tasks file for master
+- debug: msg="Hello I am a master!"

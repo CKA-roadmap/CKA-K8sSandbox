@@ -2,7 +2,7 @@
 - hosts: all
   become: true
   vars_files:
-    - vars.yml
+    - kubernetes_vars.yml
   roles:
     - common
     - containerd
@@ -11,21 +11,21 @@
 - hosts: masters
   become: true
   vars_files:
-    - vars.yml
+    - kubernetes_vars.yml
   roles:
     - master
 
 - hosts: workers
   become: true
   vars_files:
-    - vars.yml
+    - kubernetes_vars.yml
   roles:
     - worker
 
 - hosts: all
   become: true
   vars_files:
-    - vars.yml
+    - kubernetes_vars.yml
   roles:
     - networking
     - addons

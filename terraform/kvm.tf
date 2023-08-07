@@ -12,38 +12,33 @@ provider "libvirt" {
 
 variable "vm_subdomain" {
   description = "Subdomain for the KVM VMs"
-  default = "k8s.lab"
 }
 
 variable "vm_network_name" {
   description = "Name of the KVM Network"
-  default = "k8s_lab_network"
 }
 
 variable "vm_network" {
   description = "Network range for the KVM VMs"
-  default = "192.168.123.0/24"
 }
 
 variable "image_url" {
   description = "Path to bootable disk"
-  default = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-38-1.6.x86_64.qcow2"
 }
 
 variable "image_cloud_user" {
   description = "Image cloud user baked in the bootable disk"
-  default = "fedora"
 }
 
 variable "instances" {
   description = "Map of KVM instances"
   type = map(object({
-    vm_ram          = number
-    vm_cpus         = number
-    extra_disks     = optional(list(number))
-    image_url       = optional(string)
-    image_cloud_user= optional(string)
-    roles          = optional(list(string))
+    vm_ram           = optional(number)
+    vm_cpus          = optional(number)
+    extra_disks      = optional(list(number))
+    image_url        = optional(string)
+    image_cloud_user = optional(string)
+    roles            = optional(list(string))
   }))
   default = {}
 }
@@ -121,8 +116,10 @@ resource "libvirt_volume" "extra_disk" {
 resource "libvirt_domain" "vm" {
   for_each = var.instances
   name     = each.key
-  memory   = each.value.vm_ram * 1024 # memory value is in MB in Terraform Libvirt provider
-  vcpu     = each.value.vm_cpus
+  # If vm_ram is defined use it, otherwise default to 2GB
+  memory   = each.value.vm_ram != null ? each.value.vm_ram * 1024 : 2 * 1024 
+  # If vm_cpus is defined use it, otherwise default to 2 vCPUs
+  vcpu     = each.value.vm_cpus != null ? each.value.vm_cpus : 2
 
   disk {
     volume_id = libvirt_volume.vm_disk[each.key].id

@@ -20,35 +20,31 @@ sudo systemctl reboot
 
 ## Configuration
 
-Before running the Terraform scripts, you need to set the following variables in a `terraform.tfvars` file:
+Several variables allow you to customize the VM instances by editing the file `terraform.tfvars`:
 
-- `image_url`: The URL or local path to the base image in qcow2 format.
-- `image_cloud_user`: The username used in the cloud-init user data.
-- `vm_subdomain`: The subdomain to be appended to the instance hostname.
-- `instances`: A map of KVM instances you want to create, with the following attributes:
-  - `vm_ram`: The amount of RAM (in MB) to allocate to the instance.
-  - `vm_cpus`: The number of virtual CPUs to allocate to the instance.
-  - `extra_disks` (optional): A list of additional disk sizes (in GB) to attach to the instance.
+- `vm_subdomain`: Sets the subdomain for the VMs.
+- `vm_network_name`: Defines the name of the KVM network.
+- `vm_network`: Specifies the network range for the VMs.
+- `image_url`: The URL for the bootable VM image.
+- `image_cloud_user`: The default user baked into the bootable image.
+- `instances`: A map that details the VMs to be created, their specifications, and roles.
 
-Example `terraform.tfvars`:
+For the `instances` map, each VM configuration can have:
 
-```hcl
-# map of instances to be created. Expand the map as needed 
-instances = {
-  master01 = {                             # name of the vm in the instances map, it can be arbitrary
-    vm_ram = 4,                            # ram for the system, value is in GB
-    vm_cpus = 1                            # cpus for the system 
-  },
-  worker01 = {
-    vm_ram = 2,
-    vm_cpus = 1,
-    extra_disks = [10,10]                  # array of extra disks, each element is the size of the extra disk in GB
-  }
-}
-```
+- `vm_ram`: RAM size in GB (defaults to 2GB if not provided).
+- `vm_cpus`: Number of vCPUs (defaults to 2 if not provided).
+- `extra_disks`: List of additional disk sizes in GB.
+- `image_url`: URL for the bootable VM image specific to that instance.
+- `image_cloud_user`: User baked into the bootable image specific to that instance.
+- `roles`: List of roles assigned to the VM.
+
+
 The variables in this file will be dynamically included by Terraform.
 
+
 ## Usage
+
+Always locate yourself at the root of the project. 
 
 1. Initialize Terraform:
 
@@ -77,6 +73,8 @@ This command implements the changes required to match the desired configuration 
 4. Verify the connectivity with Ansible:
 
 ```bash
+ansible master --list-hosts
+ansible worker --list-hosts
 ansible all -m ping
 ```
 This command checks if Ansible can reach the newly provisioned VMs. It will work once the VMs have completed booting and the network configuration is set.
@@ -99,3 +97,7 @@ This command destroys all the infrastructure elements managed by Terraform.
 ## Resources
 
 [Libvirt terraform provider docs](https://github.com/dmacvicar/terraform-provider-libvirt) 
+
+## Further Customization
+
+Feel free to modify the script or add additional configurations to suit your specific use-case.

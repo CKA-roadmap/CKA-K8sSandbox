@@ -1,0 +1,3 @@
+---
+containerd_disk: /dev/vdb
+containerd_disk_fs: xfs

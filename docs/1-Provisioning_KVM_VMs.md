@@ -53,7 +53,7 @@ The variables in this file will be dynamically included by Terraform.
 1. Initialize Terraform:
 
 ```bash
-terraform init
+terraform -chdir=terraform init 
 ```
 
 This command configures various local settings and data necessary for subsequent Terraform operations.
@@ -61,7 +61,7 @@ This command configures various local settings and data necessary for subsequent
 2. Preview the execution plan:
 
 ```bash
-terraform plan
+terraform -chdir=terraform plan
 ```
 
 This command generates an execution plan that outlines the steps needed to achieve the state defined in the configuration files.
@@ -69,10 +69,10 @@ This command generates an execution plan that outlines the steps needed to achie
 3. Apply the changes:
 
 ```bash
-terraform apply -auto-approve
+terraform -chdir=terraform apply -auto-approve
 ```
 
-This command implements the changes required to match the desired configuration state. Upon completion, it outputs the IP addresses of the created VMs. Note: There may be a delay before the VMs are assigned IP addresses. If they are not immediately available, you can update the state by running `terraform refresh`.
+This command implements the changes required to match the desired configuration state. Upon completion, it outputs the IP addresses of the created VMs. Note: There may be a delay before the VMs are assigned IP addresses. If they are not immediately available, you can update the state by running `terraform -chdir=terraform refresh`.
 
 4. Verify the connectivity with Ansible:
 
@@ -91,7 +91,7 @@ ansible all -m command -a "lsblk"
 When you no longer require the VMs, you can remove them with:
 
 ```bash
-terraform destroy -auto-approve
+terraform -chdir=terraform destroy -auto-approve
 ```
 
 This command destroys all the infrastructure elements managed by Terraform.

@@ -17,6 +17,7 @@ variable "vm_subdomain" {
 
 variable "vm_network_name" {
   description = "Name of the KVM Network"
+  default = "k8s_lab_network"
 }
 
 variable "vm_network" {
@@ -26,18 +27,23 @@ variable "vm_network" {
 
 variable "image_url" {
   description = "Path to bootable disk"
+  default = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-38-1.6.x86_64.qcow2"
 }
 
 variable "image_cloud_user" {
   description = "Image cloud user baked in the bootable disk"
+  default = "fedora"
 }
 
 variable "instances" {
   description = "Map of KVM instances"
   type = map(object({
-    vm_ram       = number
-    vm_cpus      = number
-    extra_disks  = optional(list(number))
+    vm_ram          = number
+    vm_cpus         = number
+    extra_disks     = optional(list(number))
+    image_url       = optional(string)
+    image_cloud_user= optional(string)
+    roles          = optional(list(string))
   }))
   default = {}
 }
@@ -48,7 +54,7 @@ data "template_file" "user_data" {
     #cloud-config
     hostname: ${each.key}
     users:
-      - name: ${var.image_cloud_user}
+      - name: ${each.value.image_cloud_user != null ? each.value.image_cloud_user : var.image_cloud_user}
         sudo: ['ALL=(ALL) NOPASSWD:ALL']
         groups: sudo
         ssh_authorized_keys:
@@ -57,6 +63,7 @@ data "template_file" "user_data" {
       - [ hostnamectl, set-hostname, ${each.key}.${var.vm_subdomain} ]
   EOF
 }
+
 
 resource "libvirt_network" "private_network" {
   name       = "${var.vm_network_name}"
@@ -84,8 +91,9 @@ resource "libvirt_volume" "vm_disk" {
   name     = "${each.key}_volume.qcow2"
   pool     = "default"
   format   = "qcow2"
-  source   = var.image_url
+  source   = each.value.image_url != null ? each.value.image_url : var.image_url
 }
+
 
 locals {
   disk_map = flatten([
@@ -141,12 +149,13 @@ resource "libvirt_domain" "vm" {
 }
 
 
-output "network_info" {
+output "hosts_info" {
   value = { for name, instance in var.instances :
     name => {
-      "vm_fqdn"    = "${name}.${var.vm_subdomain}"      
-      "ip"         = length(libvirt_domain.vm[name].network_interface.0.addresses) > 0 ? "${libvirt_domain.vm[name].network_interface.0.addresses[0]}" : "IP not assigned"      
+      "vm_fqdn"    = "${name}.${var.vm_subdomain}"
+      "ip"         = length(libvirt_domain.vm[name].network_interface.0.addresses) > 0 ? "${libvirt_domain.vm[name].network_interface.0.addresses[0]}" : "IP not assigned"
       "cloud_user" = var.image_cloud_user
+      "roles"      = instance.roles != null ? instance.roles : []
     }
   }
 }

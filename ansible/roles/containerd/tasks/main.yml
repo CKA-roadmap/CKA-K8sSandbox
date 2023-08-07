@@ -1,29 +1,12 @@
 ---
-- name: initial setup 
-  gather_facts: false
-  hosts: all
-  become: true
-  tasks:
-    - name: install clients
-      dnf:
-        name: 
-          - kubernetes-client-1.26.7-1.fc38
-          - kubernetes-kubeadm-1.26.7-1.fc38
-          - kubernetes-node-1.26.7-1.fc38
-        state: present
-      
-- name: configure containerd
-  gather_facts: false
-  hosts: all
-  become: true
-  vars:
-    containerd_disk: /dev/vdb
-    containerd_disk_fs: xfs
-  tasks:
-    - name: install containerd
-      dnf:
-        name: containerd-1.6.19-1.fc38
-        state: present
+# tasks file for containerd
+- name: install containerd
+  dnf:
+    name: containerd-{{ containerd_version | default(omit) }}
+    state: present
+
+- name: configure dedicated storage
+  block:
     - name: Check if mount point exists
       stat:
         path: /var/lib/containerd
@@ -58,8 +41,11 @@
         name: containerd
         state: restarted
         daemon_reload: yes
+  when:
+    - containerd_disk is defined
+    - containerd_disk_fs is defined
 
-    - name: Enable containerd to start at boot
-      ansible.builtin.systemd:
-        name: containerd
-        enabled: yes
+- name: Enable containerd to start at boot
+  ansible.builtin.systemd:
+    name: containerd
+    enabled: yes

@@ -1,4 +1,3 @@
-Of course! Below is a README for the Ansible tasks you provided:
 # Ansible Tasks for Installing and Configuring `containerd`
 
 This Ansible role is designed to automate the installation and configuration of `containerd` on systems with the DNF package manager (such as Fedora, CentOS 8, etc.). In addition to installing `containerd`, it configures dedicated storage for it.

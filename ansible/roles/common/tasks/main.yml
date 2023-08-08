@@ -1,2 +1,9 @@
 ---
 # tasks file for common
+- name: Install required packages
+  dnf:
+    name: 
+      - telnet
+      - nmap-ncat
+      - bind-utils
+    state: present

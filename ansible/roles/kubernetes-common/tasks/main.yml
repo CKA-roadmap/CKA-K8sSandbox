@@ -7,3 +7,53 @@
       - kubernetes-kubeadm-1.26.7-1.fc38
       - kubernetes-node-1.26.7-1.fc38
     state: present
+
+# Disable Swap
+- name: Turn off swap
+  command: swapoff -a
+
+- name: Ensure swap is disabled in fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^[^#]\s*\S+\s+\S+\s+swap\s'
+    state: absent
+
+# Install required packages
+- name: Install required packages
+  dnf:
+    name:
+      - ebtables
+      - ethtool
+      - iproute-tc
+      - iptables
+    state: present
+
+# Enable kubelet service
+- name: Enable kubelet
+  systemd:
+    name: kubelet
+    enabled: yes
+
+# Ensure br_netfilter kernel module is loaded for bridge-nf-call-iptables
+- name: Load br_netfilter module
+  modprobe:
+    name: br_netfilter
+    state: present
+    
+# Ensure net.bridge.bridge-nf-call-iptables is set to 1
+- name: Ensure net.bridge.bridge-nf-call-iptables is set to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: '1'
+    state: present
+    sysctl_set: yes
+    reload: yes
+
+# Ensure net.ipv4.ip_forward is set to 1
+- name: Ensure net.ipv4.ip_forward is set to 1
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    sysctl_set: yes
+    reload: yes

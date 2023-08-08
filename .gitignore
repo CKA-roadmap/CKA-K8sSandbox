@@ -33,3 +33,4 @@ terraform.rc
 *lock*.idea/
 .idea
 terraform/.terraform.lock.hcl
+venv
